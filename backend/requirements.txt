@@ -8,3 +8,4 @@ email-validator
 chromadb
 python-multipart
 pymongo
+python-docx
