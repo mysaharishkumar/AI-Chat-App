@@ -6,7 +6,7 @@ from routes.thread import router as thread_router
 from routes.auth import router as auth_router
 from routes.memory import router as memory_router
 from routes.document import router as document_router
-from routes.voice import router as voice_router
+//from routes.voice import router as voice_router
 from routes.export import router as export_router
 from routes.export_docx import (router as export_docx_router)
 
