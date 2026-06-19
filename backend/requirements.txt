@@ -10,3 +10,4 @@ python-multipart
 pymongo
 python-docx
 pypdf
+SpeechRecognition
