@@ -1,18 +1,16 @@
 from fastapi import APIRouter
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from services.speech_service import speech_to_text
 from services.gemini_service import ask_gemini
 
-#import pyttsx3
+from gtts import gTTS
 
 router = APIRouter(
     prefix="/voice",
     tags=["Voice"]
 )
-
-#engine = pyttsx3.init()
-
 
 class VoiceRequest(BaseModel):
     text: str
@@ -21,12 +19,21 @@ class VoiceRequest(BaseModel):
 @router.post("/speak")
 async def speak(data: VoiceRequest):
 
-    #engine.say(data.text)
-    #engine.runAndWait()
+    audio_file = "voice.mp3"
 
-    return {
-        "message": "Speech completed"
-    }
+    # Telugu TTS
+    tts = gTTS(
+        text=data.text,
+        lang="te"
+    )
+
+    tts.save(audio_file)
+
+    return FileResponse(
+        audio_file,
+        media_type="audio/mpeg",
+        filename="voice.mp3"
+    )
 
 
 @router.get("/listen")
@@ -50,9 +57,6 @@ async def voice_chat():
         }
 
     ai_response = await ask_gemini(text)
-
-    #engine.say(ai_response)
-    #engine.runAndWait()
 
     return {
         "you_said": text,

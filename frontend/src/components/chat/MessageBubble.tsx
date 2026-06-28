@@ -73,22 +73,19 @@ export default function MessageBubble({
 
   };
 
-  const speakMessage =
-    (): void => {
-      window.speechSynthesis.cancel();
+  const speakMessage = (): void => {
+  window.speechSynthesis.cancel();
 
-      const speech =
-        new SpeechSynthesisUtterance(
-          text
-        );
+  const speech =
+    new SpeechSynthesisUtterance(text);
 
-      speech.lang = "en-US";
+  speech.lang = "en-US";
+  speech.volume = 1;
+  speech.rate = 1;
+  speech.pitch = 1;
 
-      window.speechSynthesis.speak(
-        speech
-      );
-    };
-
+  window.speechSynthesis.speak(speech);
+};
   return (
     <div
       className={`group mb-3 flex flex-col ${
