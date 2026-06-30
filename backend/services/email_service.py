@@ -12,41 +12,56 @@ def send_otp_email(email: str, otp: str):
     sender = os.getenv("EMAIL_ADDRESS")
     password = os.getenv("EMAIL_PASSWORD")
 
+    print("========== EMAIL DEBUG ==========")
+    print("Sender:", sender)
+    print("Password Exists:", password is not None)
+    print("Sending to:", email)
+
     body = f"""
 Hello,
 
-Welcome to AI Chat App.
-
-Your One-Time Password (OTP) is:
+Your OTP is:
 
 {otp}
-
-This OTP will expire in 5 minutes.
-
-If you did not request this OTP, please ignore this email.
-
-Regards,
-AI Chat App Team
 """
 
     msg = MIMEText(body)
 
-    msg["Subject"] = "AI Chat App - Login Verification"
-    msg["From"] = f"AI Chat App <{sender}>"
+    msg["Subject"] = "OTP"
+    msg["From"] = sender
     msg["To"] = email
 
-    server = smtplib.SMTP(
-        "smtp.gmail.com",
-        587
-    )
+    try:
 
-    server.starttls()
+        print("Connecting SMTP...")
 
-    server.login(
-        sender,
-        password
-    )
+        server = smtplib.SMTP(
+            "smtp.gmail.com",
+            587,
+            timeout=10
+        )
 
-    server.send_message(msg)
+        print("Connected")
 
-    server.quit()
+        server.starttls()
+
+        print("TLS Started")
+
+        server.login(
+            sender,
+            password
+        )
+
+        print("Login Success")
+
+        server.send_message(msg)
+
+        print("Email Sent")
+
+        server.quit()
+
+    except Exception as e:
+
+        print("EMAIL ERROR:", e)
+
+        raise
