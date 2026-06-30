@@ -34,6 +34,8 @@ export default function ChatWindow({
   const [messages, setMessages] =
     useState<Message[]>([]);
 
+    const GUEST_CHAT_KEY = "guest_chat";
+
   const [loading, setLoading] =
     useState(false);
 
@@ -56,22 +58,39 @@ export default function ChatWindow({
         try {
 
           const userId =
-            localStorage.getItem(
-              "user_id"
-            ) || "";
+  localStorage.getItem("user_id");
 
-          const threadId =
-            localStorage.getItem(
-              "thread_id"
-            ) || "";
+const threadId =
+  localStorage.getItem("thread_id");
 
-          if (
-            !userId ||
-            !threadId
-          ) {
-            setMessages([]);
-            return;
-          }
+          if (!userId) {
+
+  const guest =
+    localStorage.getItem(GUEST_CHAT_KEY);
+
+  if (guest) {
+
+    setMessages(
+      JSON.parse(guest)
+    );
+
+  } else {
+
+    setMessages([]);
+
+  }
+
+  return;
+
+}
+
+if (!threadId) {
+
+  setMessages([]);
+
+  return;
+
+}
 
           const history =
             await getChatHistory(
@@ -127,26 +146,43 @@ export default function ChatWindow({
 
     void loadHistory();
 
-    const handleThreadChange =
-      () => {
-        void loadHistory();
-      };
+const handleThreadChange = () => {
+  void loadHistory();
+};
 
-    window.addEventListener(
-      "threadChanged",
-      handleThreadChange
-    );
+const handleGuestNewChat = () => {
 
-    return () => {
+  setMessages([]);
 
-      window.removeEventListener(
-        "threadChanged",
-        handleThreadChange
-      );
+  localStorage.removeItem("guest_chat");
 
-    };
+};
 
-  }, []);
+window.addEventListener(
+  "threadChanged",
+  handleThreadChange
+);
+
+window.addEventListener(
+  "guestNewChat",
+  handleGuestNewChat
+);
+
+return () => {
+
+  window.removeEventListener(
+    "threadChanged",
+    handleThreadChange
+  );
+
+  window.removeEventListener(
+    "guestNewChat",
+    handleGuestNewChat
+  );
+
+};
+
+}, []);
 
   const sendMessage =
     async (
@@ -172,33 +208,44 @@ export default function ChatWindow({
             getCurrentTime(),
         };
 
-      setMessages(
-        (prev) => [
-          ...prev,
-          userMessage,
-        ]
-      );
+      let updatedMessages: Message[] = [];
+
+setMessages(prev => {
+
+  updatedMessages = [
+    ...prev,
+    userMessage
+  ];
+
+  if (!localStorage.getItem("user_id")) {
+
+    localStorage.setItem(
+      GUEST_CHAT_KEY,
+      JSON.stringify(updatedMessages)
+    );
+
+  }
+
+  return updatedMessages;
+
+});
 
       try {
 
         setLoading(true);
 
         const userId =
-          localStorage.getItem(
-            "user_id"
-          ) || "";
+  localStorage.getItem("user_id");
 
-        const threadId =
-          localStorage.getItem(
-            "thread_id"
-          ) || "";
+const threadId =
+  localStorage.getItem("thread_id");
 
         const reply =
           await sendChatMessage(
-            text,
-            userId,
-            threadId
-          );
+  text,
+  userId ?? "",
+  threadId ?? ""
+);
 
         const aiMessage: Message =
           {
@@ -211,12 +258,25 @@ export default function ChatWindow({
               getCurrentTime(),
           };
 
-        setMessages(
-          (prev) => [
-            ...prev,
-            aiMessage,
-          ]
-        );
+        setMessages(prev => {
+
+  const updated = [
+    ...prev,
+    aiMessage
+  ];
+
+  if (!localStorage.getItem("user_id")) {
+
+    localStorage.setItem(
+      GUEST_CHAT_KEY,
+      JSON.stringify(updated)
+    );
+
+  }
+
+  return updated;
+
+});
 
       } catch (error) {
 
@@ -236,13 +296,25 @@ export default function ChatWindow({
     id: number
   ): void => {
 
-    setMessages(
-      (prev) =>
-        prev.filter(
-          (msg) =>
-            msg.id !== id
-        )
+    setMessages(prev => {
+
+  const updated =
+    prev.filter(
+      msg => msg.id !== id
     );
+
+  if (!localStorage.getItem("user_id")) {
+
+    localStorage.setItem(
+      GUEST_CHAT_KEY,
+      JSON.stringify(updated)
+    );
+
+  }
+
+  return updated;
+
+});
 
   };
 
@@ -270,17 +342,30 @@ export default function ChatWindow({
       return;
     }
 
-    setMessages(
-      (prev) =>
-        prev.map((m) =>
-          m.id === id
-            ? {
-                ...m,
-                text: updated,
-              }
-            : m
-        )
+    setMessages(prev => {
+
+  const updatedList =
+    prev.map(m =>
+      m.id === id
+        ? {
+            ...m,
+            text: updated,
+          }
+        : m
     );
+
+  if (!localStorage.getItem("user_id")) {
+
+    localStorage.setItem(
+      GUEST_CHAT_KEY,
+      JSON.stringify(updatedList)
+    );
+
+  }
+
+  return updatedList;
+
+});
 
   };
 
@@ -317,7 +402,7 @@ export default function ChatWindow({
   "
 >
 
-        {!localStorage.getItem("thread_id") && (
+        {messages.length === 0 && (
           <div
   className="
     flex

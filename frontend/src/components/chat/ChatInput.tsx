@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 import {
   Plus,
@@ -53,13 +53,16 @@ export default function ChatInput({
 }: Props) {
 
   const [message, setMessage] =
-    useState("");
+  useState("");
 
-  const [listening, setListening] =
-    useState(false);
+const [listening, setListening] =
+  useState(false);
 
-  const [selectedFile, setSelectedFile] =
-    useState<File | null>(null);
+const [selectedFile, setSelectedFile] =
+  useState<File | null>(null);
+
+const [visible, setVisible] =
+  useState(false);
 
   const textareaRef =
     useRef<HTMLTextAreaElement>(null);
@@ -67,9 +70,59 @@ export default function ChatInput({
   const fileInputRef =
     useRef<HTMLInputElement>(null);
 
-    if (!threadId) {
-  return null;
+  useEffect(() => {
+
+    if (threadId) {
+
+  queueMicrotask(() => {
+    setVisible(true);
+  });
+
 }
+
+    const guestStart = () => {
+
+      setVisible(true);
+
+    };
+
+    const guestHome = () => {
+
+      setVisible(false);
+
+    };
+
+    window.addEventListener(
+      "guestStartChat",
+      guestStart
+    );
+
+    window.addEventListener(
+      "guestNewChat",
+      guestHome
+    );
+
+    return () => {
+
+      window.removeEventListener(
+        "guestStartChat",
+        guestStart
+      );
+
+      window.removeEventListener(
+        "guestNewChat",
+        guestHome
+      );
+
+    };
+
+  }, [threadId]);
+
+  if (!visible) {
+
+    return null;
+
+  }
 
   const sendMessage = (): void => {
 
@@ -86,36 +139,36 @@ export default function ChatInput({
     );
 
     setMessage("");
+
     setSelectedFile(null);
 
     if (textareaRef.current) {
+
       textareaRef.current.style.height =
         "48px";
+
     }
 
   };
 
   const handleChange = (
-  e: React.ChangeEvent<HTMLTextAreaElement>
-): void => {
+    e: React.ChangeEvent<HTMLTextAreaElement>
+  ): void => {
 
-  setMessage(
-    e.target.value
-  );
-
-  e.target.style.height =
-    "auto";
-
-  const newHeight =
-    Math.min(
-      e.target.scrollHeight,
-      180
+    setMessage(
+      e.target.value
     );
 
-  e.target.style.height =
-    `${newHeight}px`;
+    e.target.style.height =
+      "auto";
 
-};
+    e.target.style.height =
+      `${Math.min(
+        e.target.scrollHeight,
+        180
+      )}px`;
+
+  };
 
   const handleKeyDown = (
     e: React.KeyboardEvent<HTMLTextAreaElement>
@@ -156,48 +209,45 @@ export default function ChatInput({
     const recognition =
       new SpeechRecognitionAPI();
 
-    recognition.lang = "en-US";
+    recognition.lang =
+      "en-US";
 
     recognition.start();
 
     setListening(true);
 
-    recognition.onresult = (
-      event
-    ) => {
+    recognition.onresult =
+      (event) => {
 
-      const transcript =
-        event.results[0][0]
-          .transcript;
+        setMessage(
+          event.results[0][0]
+            .transcript
+        );
 
-      setMessage(
-        transcript
-      );
+      };
 
-    };
+    recognition.onerror =
+      () => setListening(false);
 
-    recognition.onerror = () =>
-      setListening(false);
-
-    recognition.onend = () =>
-      setListening(false);
+    recognition.onend =
+      () => setListening(false);
 
   };
 
   return (
 
     <div
-  className="
-    sticky
-    bottom-0
-    bg-white
-    dark:bg-zinc-900
-    border-t
-    border-zinc-300
-    dark:border-zinc-800
-    p-3
-  "
->
+      className="
+        sticky
+        bottom-0
+        bg-white
+        dark:bg-zinc-900
+        border-t
+        border-zinc-300
+        dark:border-zinc-800
+        p-3
+      "
+    >
 
       <div
         className="
@@ -243,9 +293,7 @@ export default function ChatInput({
 
               <button
                 onClick={() =>
-                  setSelectedFile(
-                    null
-                  )
+                  setSelectedFile(null)
                 }
                 className="
                   text-red-400
@@ -262,131 +310,112 @@ export default function ChatInput({
         )}
 
         <div
-  className="
-    flex
-    items-end
-    gap-2
-
-    bg-white
-    dark:bg-zinc-900
-
-    border
-    border-zinc-300
-    dark:border-zinc-700
-
-    rounded-[32px]
-
-    px-3
-    py-1.5
-
-    min-h-[52px]
-
-    shadow-sm
-  "
->
+          className="
+            flex
+            items-end
+            gap-2
+            bg-white
+            dark:bg-zinc-900
+            border
+            border-zinc-300
+            dark:border-zinc-700
+            rounded-[32px]
+            px-3
+            py-1.5
+            min-h-[52px]
+            shadow-sm
+          "
+        >
 
           <input
             ref={fileInputRef}
             type="file"
             accept=".pdf,.doc,.docx"
             hidden
-            onChange={(e) => {
-
-              const file =
-                e.target.files?.[0] ||
-                null;
-
+            onChange={(e) =>
               setSelectedFile(
-                file
-              );
-
-            }}
+                e.target.files?.[0] ||
+                null
+              )
+            }
           />
 
           <button
-  onClick={() =>
-    fileInputRef.current?.click()
-  }
-  className="
-    p-2
-    mb-1
-    rounded-full
-    text-zinc-600
-    dark:text-zinc-400
-    hover:bg-gray-200
-    dark:hover:bg-zinc-800
-  "
->
-  <Plus size={20} />
-</button>
+            onClick={() =>
+              fileInputRef.current?.click()
+            }
+            className="
+              p-2
+              mb-1
+              rounded-full
+              text-zinc-600
+              dark:text-zinc-400
+              hover:bg-gray-200
+              dark:hover:bg-zinc-800
+            "
+          >
+            <Plus size={20} />
+          </button>
 
           <textarea
-  ref={textareaRef}
-  value={message}
-  onChange={handleChange}
-  onKeyDown={handleKeyDown}
-  rows={1}
-  placeholder="Message AI..."
-  className="
-    flex-1
-    resize-none
-    bg-transparent
-    text-black
-    dark:text-white
-    outline-none
-
-    min-h-[20px]
-    max-h-[180px]
-
-    overflow-y-auto
-
-    leading-6
-
-    placeholder:text-zinc-400
-  "
-/>
-          <button
-  onClick={startVoiceInput}
-  className={`
-    p-2
-    mb-1
-    rounded-full
-    hover:bg-gray-200
-    dark:hover:bg-zinc-800
-    ${
-      listening
-        ? "text-red-500 animate-pulse"
-        : "text-zinc-600 dark:text-zinc-400"
-    }
-  `}
->
-  <Mic size={20} />
-</button>
+            ref={textareaRef}
+            value={message}
+            onChange={handleChange}
+            onKeyDown={handleKeyDown}
+            rows={1}
+            placeholder="Message AI..."
+            className="
+              flex-1
+              resize-none
+              bg-transparent
+              text-black
+              dark:text-white
+              outline-none
+              min-h-[20px]
+              max-h-[180px]
+              overflow-y-auto
+              leading-6
+              placeholder:text-zinc-400
+            "
+          />
 
           <button
-  onClick={sendMessage}
-  className="
-    w-8
-    h-8
-    mb-1
+            onClick={startVoiceInput}
+            className={`
+              p-2
+              mb-1
+              rounded-full
+              hover:bg-gray-200
+              dark:hover:bg-zinc-800
+              ${
+                listening
+                  ? "text-red-500 animate-pulse"
+                  : "text-zinc-600 dark:text-zinc-400"
+              }
+            `}
+          >
+            <Mic size={20} />
+          </button>
 
-    rounded-full
-
-    bg-black
-    dark:bg-white
-
-    text-white
-    dark:text-black
-
-    flex
-    items-center
-    justify-center
-
-    shrink-0
-  "
->
-  <ArrowUp size={18} />
-</button>
+          <button
+            onClick={sendMessage}
+            className="
+              w-8
+              h-8
+              mb-1
+              rounded-full
+              bg-black
+              dark:bg-white
+              text-white
+              dark:text-black
+              flex
+              items-center
+              justify-center
+              shrink-0
+            "
+          >
+            <ArrowUp size={18} />
+          </button>
 
         </div>
 

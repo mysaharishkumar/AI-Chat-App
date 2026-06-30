@@ -92,28 +92,46 @@ const [threadToDelete, setThreadToDelete] =
   const handleNewChat =
   async (): Promise<void> => {
 
+    alert("New Chat Clicked");
+
+    const userId =
+      localStorage.getItem("user_id");
+
+    // Guest User
+    // Guest User
+if (!userId) {
+
+  // Clear old guest conversation
+  localStorage.removeItem("guest_chat");
+
+  // Remove guest thread
+  localStorage.removeItem("thread_id");
+
+  // Refresh ChatWindow
+  window.dispatchEvent(
+    new Event("threadChanged")
+  );
+
+  // Hide keyboard
+  window.dispatchEvent(
+    new Event("guestNewChat")
+  );
+
+  return;
+
+}
+
+    // Logged In User
+
     try {
 
-      const userId =
-        localStorage.getItem(
-          "user_id"
-        ) || "";
-
-      if (!userId) {
-        return;
-      }
-
       const thread =
-        await createThread(
-          userId
-        );
+        await createThread(userId);
 
-      setThreads(
-        (prev) => [
-          thread,
-          ...prev,
-        ]
-      );
+      setThreads(prev => [
+        thread,
+        ...prev,
+      ]);
 
       localStorage.setItem(
         "thread_id",
@@ -125,21 +143,16 @@ const [threadToDelete, setThreadToDelete] =
       );
 
       window.dispatchEvent(
-        new Event(
-          "threadChanged"
-        )
+        new Event("threadChanged")
       );
 
     } catch (error) {
 
-      console.error(
-        error
-      );
+      console.error(error);
 
     }
 
   };
-
 
   const saveRename = (): void => {
 

@@ -1,62 +1,111 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import {
   User,
   Settings,
   LogOut,
   ChevronRight,
+  LogIn,
 } from "lucide-react";
 
 import ProfileModal from "../profile/ProfileModal";
 
 export default function ProfileMenu() {
-  const [open, setOpen] =
-    useState(false);
+
+  const navigate = useNavigate();
+
+  const [open, setOpen] = useState(false);
 
   const [profileOpen, setProfileOpen] =
     useState(false);
 
+  const userId =
+    localStorage.getItem("user_id");
+
   const displayName =
-    localStorage.getItem(
-      "display_name"
-    ) ||
+    localStorage.getItem("display_name") ||
     (
-      localStorage.getItem(
-        "email"
-      ) || ""
+      localStorage.getItem("email") || "Guest"
     ).split("@")[0];
 
   const profilePhoto =
-    localStorage.getItem(
-      "profile_photo"
-    ) || "";
+    localStorage.getItem("profile_photo") || "";
 
   const logout = (): void => {
-    localStorage.clear();
 
-    window.location.href =
-      "/";
+    localStorage.removeItem("user_id");
+    localStorage.removeItem("email");
+    localStorage.removeItem("display_name");
+    localStorage.removeItem("profile_photo");
+    localStorage.removeItem("thread_id");
+
+    navigate("/");
+
   };
 
+  // ============================
+  // Guest User
+  // ============================
+
+  if (!userId) {
+
+    return (
+
+      <div className="p-3">
+
+        <button
+          onClick={() => navigate("/login")}
+          className="
+            w-full
+            flex
+            items-center
+            gap-3
+            p-3
+            rounded-xl
+            bg-cyan-500
+            hover:bg-cyan-600
+            text-white
+            font-semibold
+            transition
+          "
+        >
+
+          <LogIn size={20} />
+
+          <span>Sign In</span>
+
+        </button>
+
+      </div>
+
+    );
+
+  }
+
+  // ============================
+  // Logged In User
+  // ============================
+
   return (
+
     <>
+
       <div className="relative">
 
         <button
-          onClick={() =>
-            setOpen(!open)
-          }
+          onClick={() => setOpen(!open)}
           className="
-  w-full
-  flex
-  items-center
-  gap-3
-  p-3
-  rounded-xl
-  hover:bg-gray-200
-  dark:hover:bg-zinc-800
-  transition
-"
+            w-full
+            flex
+            items-center
+            gap-3
+            p-3
+            rounded-xl
+            hover:bg-gray-200
+            dark:hover:bg-zinc-800
+            transition
+          "
         >
 
           {profilePhoto ? (
@@ -75,23 +124,23 @@ export default function ProfileMenu() {
           ) : (
 
             <div
-  className="
-    w-10
-    h-10
-    rounded-full
-    bg-gray-300
-    dark:bg-zinc-600
-    flex
-    items-center
-    justify-center
-    text-black
-    dark:text-white
-    font-semibold
-  "
->
-              {displayName
-                .charAt(0)
-                .toUpperCase()}
+              className="
+                w-10
+                h-10
+                rounded-full
+                bg-gray-300
+                dark:bg-zinc-600
+                flex
+                items-center
+                justify-center
+                text-black
+                dark:text-white
+                font-semibold
+              "
+            >
+
+              {displayName.charAt(0).toUpperCase()}
+
             </div>
 
           )}
@@ -99,15 +148,17 @@ export default function ProfileMenu() {
           <div className="flex-1 text-left">
 
             <p
-  className="
-    text-black
-    dark:text-white
-    font-medium
-    truncate
-  "
->
-  {displayName}
-</p>
+              className="
+                text-black
+                dark:text-white
+                font-medium
+                truncate
+              "
+            >
+
+              {displayName}
+
+            </p>
 
           </div>
 
@@ -128,10 +179,10 @@ export default function ProfileMenu() {
               mt-2
               w-full
               bg-white
-dark:bg-zinc-900
+              dark:bg-zinc-900
               border
               border-zinc-300
-dark:border-zinc-800
+              dark:border-zinc-800
               rounded-2xl
               shadow-xl
               overflow-hidden
@@ -142,36 +193,7 @@ dark:border-zinc-800
             <button
               onClick={() => {
 
-                setProfileOpen(
-                  true
-                );
-
-                setOpen(false);
-
-              }}
-              className="
-  w-full
-  flex
-  items-center
-  gap-3
-  px-4
-  py-3
-  text-black
-  dark:text-white
-  hover:bg-gray-200
-  dark:hover:bg-zinc-800
-"
-            >
-              <User size={18} />
-              My Profile
-            </button>
-
-            <button
-              onClick={() => {
-
-                alert(
-                  "Settings Coming Soon"
-                );
+                setProfileOpen(true);
 
                 setOpen(false);
 
@@ -184,13 +206,44 @@ dark:border-zinc-800
                 px-4
                 py-3
                 text-black
-dark:text-white
-hover:bg-gray-200
-dark:hover:bg-zinc-800
+                dark:text-white
+                hover:bg-gray-200
+                dark:hover:bg-zinc-800
               "
             >
+
+              <User size={18} />
+
+              My Profile
+
+            </button>
+
+            <button
+              onClick={() => {
+
+                alert("Settings Coming Soon");
+
+                setOpen(false);
+
+              }}
+              className="
+                w-full
+                flex
+                items-center
+                gap-3
+                px-4
+                py-3
+                text-black
+                dark:text-white
+                hover:bg-gray-200
+                dark:hover:bg-zinc-800
+              "
+            >
+
               <Settings size={18} />
+
               Settings
+
             </button>
 
             <div className="border-t border-zinc-300 dark:border-zinc-800" />
@@ -205,13 +258,16 @@ dark:hover:bg-zinc-800
                 px-4
                 py-3
                 text-red-500
-dark:text-red-400
-hover:bg-gray-200
-dark:hover:bg-zinc-800
+                dark:text-red-400
+                hover:bg-gray-200
+                dark:hover:bg-zinc-800
               "
             >
+
               <LogOut size={18} />
+
               Logout
+
             </button>
 
           </div>
@@ -222,12 +278,11 @@ dark:hover:bg-zinc-800
 
       <ProfileModal
         isOpen={profileOpen}
-        onClose={() =>
-          setProfileOpen(
-            false
-          )
-        }
+        onClose={() => setProfileOpen(false)}
       />
+
     </>
+
   );
+
 }

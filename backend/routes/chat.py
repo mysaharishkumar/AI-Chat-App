@@ -1,4 +1,6 @@
 from fastapi import APIRouter
+from bson import ObjectId
+
 from models.message import ChatRequest
 
 from services.gemini_service import ask_gemini
@@ -23,23 +25,26 @@ async def chat(req: ChatRequest):
     if "my name is" in message_lower:
 
         name = (
-            req.message.lower()
+            req.message
+            .lower()
             .split("my name is")[-1]
             .strip()
             .title()
         )
 
-        await save_memory(
-            req.user_id,
-            "name",
-            name
-        )
+        if req.user_id:
+            await save_memory(
+                req.user_id,
+                "name",
+                name
+            )
 
     # Get Memories
 
-    memories = await get_memories(
-        req.user_id
-    )
+    memories = []
+
+    if req.user_id:
+        memories = await get_memories(req.user_id)
 
     # Gemini Response
 
@@ -48,52 +53,47 @@ async def chat(req: ChatRequest):
         memories
     )
 
-    # Save Message
+    # Save only for logged in users
 
-    await messages.insert_one({
-        "user_id": req.user_id,
-        "thread_id": req.thread_id,
-        "user_message": req.message,
-        "ai_response": ai_response
-    })
+    if req.user_id and req.thread_id:
 
-    # Auto Update Thread Title
-    # Only for first message
+        await messages.insert_one({
+            "user_id": req.user_id,
+            "thread_id": req.thread_id,
+            "user_message": req.message,
+            "ai_response": ai_response
+        })
 
-    count = await messages.count_documents({
-        "thread_id": req.thread_id
-    })
+        count = await messages.count_documents({
+            "thread_id": req.thread_id
+        })
 
-    if count == 1:
+        if count == 1:
 
-        title = (
-            req.message[:40]
-            if len(req.message) > 40
-            else req.message
-        )
+            title = (
+                req.message[:40]
+                if len(req.message) > 40
+                else req.message
+            )
 
-        await threads.update_one(
-    {
-        "_id": __import__("bson").ObjectId(
-            req.thread_id
-        )
-    },
-    {
-        "$set": {
-            "title": title,
-            "empty": False
-        }
-    }
-)
+            await threads.update_one(
+                {
+                    "_id": ObjectId(req.thread_id)
+                },
+                {
+                    "$set": {
+                        "title": title,
+                        "empty": False
+                    }
+                }
+            )
 
     return {
         "reply": ai_response
     }
 
 
-@router.get(
-    "/chat/history/{user_id}/{thread_id}"
-)
+@router.get("/chat/history/{user_id}/{thread_id}")
 async def chat_history(
     user_id: str,
     thread_id: str
@@ -107,11 +107,8 @@ async def chat_history(
     }):
 
         result.append({
-            "user_message":
-            message["user_message"],
-
-            "ai_response":
-            message["ai_response"]
+            "user_message": message["user_message"],
+            "ai_response": message["ai_response"]
         })
 
     return result

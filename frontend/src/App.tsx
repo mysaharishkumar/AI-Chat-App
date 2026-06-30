@@ -2,26 +2,10 @@ import {
   BrowserRouter,
   Routes,
   Route,
-  Navigate,
 } from "react-router-dom";
 
-import Login from "./pages/Login";
 import Chat from "./pages/Chat";
-
-type ProtectedProps = {
-  children: React.ReactNode;
-};
-
-function ProtectedRoute({
-  children,
-}: ProtectedProps) {
-  const userId =
-    localStorage.getItem("user_id");
-
-  return userId
-    ? children
-    : <Navigate to="/" replace />;
-}
+import Login from "./pages/Login";
 
 export default function App() {
   return (
@@ -30,16 +14,12 @@ export default function App() {
 
         <Route
           path="/"
-          element={<Login />}
+          element={<Chat />}
         />
 
         <Route
-          path="/chat"
-          element={
-            <ProtectedRoute>
-              <Chat />
-            </ProtectedRoute>
-          }
+          path="/login"
+          element={<Login />}
         />
 
       </Routes>
